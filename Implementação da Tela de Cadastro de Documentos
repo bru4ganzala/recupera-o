@@ -1,0 +1,86 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+import java.util.ArrayList;
+
+public class CadastroDocumento {
+    private JFrame frame;
+    private JTextField txtTitulo;
+    private JTextField txtAutor;
+    private JTextField txtDataCriacao;
+    private JButton btnSalvar;
+
+    public CadastroDocumento() {
+        frame = new JFrame("Cadastro de Documentos");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 300);
+        frame.setLayout(new GridLayout(4, 2));
+
+        JLabel lblTitulo = new JLabel("Título:");
+        JLabel lblAutor = new JLabel("Autor:");
+        JLabel lblDataCriacao = new JLabel("Data de Criação:");
+
+        txtTitulo = new JTextField();
+        txtAutor = new JTextField();
+        txtDataCriacao = new JTextField();
+
+        btnSalvar = new JButton("Salvar");
+
+        frame.add(lblTitulo);
+        frame.add(txtTitulo);
+        frame.add(lblAutor);
+        frame.add(txtAutor);
+        frame.add(lblDataCriacao);
+        frame.add(txtDataCriacao);
+        frame.add(btnSalvar);
+
+        btnSalvar.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                salvarDocumento();
+            }
+        });
+
+        frame.setVisible(true);
+    }
+
+    private void salvarDocumento() {
+        String titulo = txtTitulo.getText().trim();
+        String autor = txtAutor.getText().trim();
+        String dataCriacao = txtDataCriacao.getText().trim();
+
+        if (titulo.isEmpty() || autor.isEmpty() || dataCriacao.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Todos os campos são obrigatórios.");
+            return;
+        }
+
+        if (!dataCriacao.matches("\\d{2}/\\d{2}/\\d{4}")) {
+            JOptionPane.showMessageDialog(frame, "Data deve estar no formato DD/MM/AAAA.");
+            return;
+        }
+
+        Documento doc = new Documento(titulo, autor, dataCriacao);
+        salvarArquivo(doc);
+        JOptionPane.showMessageDialog(frame, "Documento salvo com sucesso!");
+        limparCampos();
+    }
+
+    private void salvarArquivo(Documento doc) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("documentos.txt", true))) {
+            writer.write(doc.toString());
+            writer.newLine();
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(frame, "Erro ao salvar o arquivo.");
+        }
+    }
+
+    private void limparCampos() {
+        txtTitulo.setText("");
+        txtAutor.setText("");
+        txtDataCriacao.setText("");
+    }
+
+    public static void main(String[] args) {
+        new CadastroDocumento();
+    }
+}
