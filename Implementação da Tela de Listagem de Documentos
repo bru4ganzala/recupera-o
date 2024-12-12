@@ -1,0 +1,94 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.io.*;
+import java.util.*;
+
+public class ListagemDocumentos {
+    private JFrame frame;
+    private JTable table;
+    private JButton btnCarregar;
+    private JButton btnExcluir;
+    private DefaultTableModel tableModel;
+
+    public ListagemDocumentos() {
+        frame = new JFrame("Listagem de Documentos");
+        frame.setSize(600, 400);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        String[] columnNames = {"Título", "Autor", "Data de Criação"};
+        tableModel = new DefaultTableModel(columnNames, 0);
+        table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        btnCarregar = new JButton("Carregar Dados");
+        btnExcluir = new JButton("Excluir");
+
+        frame.setLayout(new BorderLayout());
+        frame.add(scrollPane, BorderLayout.CENTER);
+
+        JPanel panel = new JPanel();
+        panel.add(btnCarregar);
+        panel.add(btnExcluir);
+        frame.add(panel, BorderLayout.SOUTH);
+
+        btnCarregar.addActionListener(e -> carregarDados());
+        btnExcluir.addActionListener(e -> excluirDocumento());
+
+        frame.setVisible(true);
+    }
+
+    private void carregarDados() {
+        List<Documento> documentos = lerArquivo();
+        tableModel.setRowCount(0);
+        for (Documento doc : documentos) {
+            tableModel.addRow(new Object[]{doc.getTitulo(), doc.getAutor(), doc.getDataCriacao()});
+        }
+    }
+
+    private List<Documento> lerArquivo() {
+        List<Documento> documentos = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("documentos.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] data = line.split(",");
+                documentos.add(new Documento(data[0], data[1], data[2]));
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(frame, "Erro ao ler o arquivo.");
+        }
+        return documentos;
+    }
+
+    private void excluirDocumento() {
+        int row = table.getSelectedRow();
+        if (row >= 0) {
+            String titulo = (String) tableModel.getValueAt(row, 0);
+            excluirDoArquivo(titulo);
+            tableModel.removeRow(row);
+            JOptionPane.showMessageDialog(frame, "Documento excluído com sucesso!");
+        } else {
+            JOptionPane.showMessageDialog(frame, "Selecione um documento para excluir.");
+        }
+    }
+
+    private void excluirDoArquivo(String titulo) {
+        List<Documento> documentos = lerArquivo();
+        documentos.removeIf(doc -> doc.getTitulo().equals(titulo));
+        atualizarArquivo(documentos);
+    }
+
+    private void atualizarArquivo(List<Documento> documentos) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("documentos.txt"))) {
+            for (Documento doc : documentos) {
+                writer.write(doc.toString());
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(frame, "Erro ao atualizar o arquivo.");
+        }
+    }
+
+    public static void main(String[] args) {
+        new ListagemDocumentos();
+    }
+}
